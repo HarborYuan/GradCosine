@@ -1,4 +1,3 @@
-# 21.10 is the last version of CUDA 11.4 + torch 1.10
 FROM nvcr.io/nvidia/pytorch:21.10-py3
 
 # install ujson
