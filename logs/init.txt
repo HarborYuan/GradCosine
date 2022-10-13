@@ -1,0 +1,957 @@
+2022-10-08 17:04:24,650 - mmcls - INFO - Environment info:
+------------------------------------------------------------
+sys.platform: linux
+Python: 3.8.12 | packaged by conda-forge | (default, Sep 29 2021, 19:52:28) [GCC 9.4.0]
+CUDA available: True
+GPU 0,1,2,3,4,5,6,7: A100-SXM4-40GB
+CUDA_HOME: /usr/local/cuda
+NVCC: Build cuda_11.4.r11.4/compiler.30300941_0
+GCC: gcc (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0
+PyTorch: 1.10.0a0+0aef44c
+PyTorch compiling details: PyTorch built with:
+  - GCC 9.3
+  - C++ Version: 201402
+  - Intel(R) Math Kernel Library Version 2019.0.5 Product Build 20190808 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v2.2.3 (Git Hash N/A)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - LAPACK is enabled (usually provided by MKL)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 11.4
+  - NVCC architecture flags: -gencode;arch=compute_52,code=sm_52;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_61,code=sm_61;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86;-gencode;arch=compute_86,code=compute_86
+  - CuDNN 8.2.4
+  - Magma 2.5.2
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=11.4, CUDNN_VERSION=8.2.4, CXX_COMPILER=/usr/bin/c++, CXX_FLAGS=-fno-gnu-unique -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -fopenmp -DNDEBUG -DUSE_KINETO -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE -DEDGE_PROFILER_USE_KINETO -O2 -fPIC -Wno-narrowing -Wall -Wextra -Werror=return-type -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-psabi -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Werror=cast-function-type -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_VERSION=1.10.0, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=ON, USE_NCCL=ON, USE_NNPACK=ON, USE_OPENMP=ON, 
+
+TorchVision: 0.11.0a0
+OpenCV: 3.4.11
+MMCV: 1.4.8
+MMCV Compiler: GCC 9.3
+MMCV CUDA Compiler: 11.4
+MMClassification: 0.22.0+8f35580
+------------------------------------------------------------
+
+2022-10-08 17:04:24,650 - mmcls - INFO - Distributed training: False
+2022-10-08 17:04:24,780 - mmcls - INFO - Config:
+model = dict(
+    type='ImageClassifier',
+    backbone=dict(
+        type='ResNet',
+        depth=50,
+        num_stages=4,
+        out_indices=(3, ),
+        style='pytorch'),
+    neck=dict(type='GlobalAveragePooling'),
+    head=dict(
+        type='LinearClsHead',
+        num_classes=1000,
+        in_channels=2048,
+        loss=dict(type='CrossEntropyLoss', loss_weight=1.0),
+        topk=(1, 5)))
+dataset_type = 'ImageNet'
+img_norm_cfg = dict(
+    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
+train_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='RandomResizedCrop', size=224),
+    dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
+    dict(
+        type='Normalize',
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        to_rgb=True),
+    dict(type='ImageToTensor', keys=['img']),
+    dict(type='ToTensor', keys=['gt_label']),
+    dict(type='Collect', keys=['img', 'gt_label'])
+]
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='Resize', size=(256, -1)),
+    dict(type='CenterCrop', crop_size=224),
+    dict(
+        type='Normalize',
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        to_rgb=True),
+    dict(type='ImageToTensor', keys=['img']),
+    dict(type='Collect', keys=['img'])
+]
+data = dict(
+    samples_per_gpu=32,
+    workers_per_gpu=32,
+    train=dict(
+        type='ImageNet',
+        data_prefix='data/imagenet/train',
+        ann_file='data/imagenet/meta/train.txt',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(type='RandomResizedCrop', size=224),
+            dict(type='RandomFlip', flip_prob=0.5, direction='horizontal'),
+            dict(
+                type='Normalize',
+                mean=[123.675, 116.28, 103.53],
+                std=[58.395, 57.12, 57.375],
+                to_rgb=True),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='ToTensor', keys=['gt_label']),
+            dict(type='Collect', keys=['img', 'gt_label'])
+        ]),
+    val=dict(
+        type='ImageNet',
+        data_prefix='data/imagenet/val',
+        ann_file='data/imagenet/meta/val.txt',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(type='Resize', size=(256, -1)),
+            dict(type='CenterCrop', crop_size=224),
+            dict(
+                type='Normalize',
+                mean=[123.675, 116.28, 103.53],
+                std=[58.395, 57.12, 57.375],
+                to_rgb=True),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img'])
+        ]),
+    test=dict(
+        type='ImageNet',
+        data_prefix='data/imagenet/val',
+        ann_file='data/imagenet/meta/val.txt',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(type='Resize', size=(256, -1)),
+            dict(type='CenterCrop', crop_size=224),
+            dict(
+                type='Normalize',
+                mean=[123.675, 116.28, 103.53],
+                std=[58.395, 57.12, 57.375],
+                to_rgb=True),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img'])
+        ]))
+evaluation = dict(interval=1, metric='accuracy', save_best='auto')
+optimizer = dict(type='SGD', lr=0.1, momentum=0.9, weight_decay=0.0001)
+optimizer_config = dict(grad_clip=None)
+lr_config = dict(policy='step', step=[30, 60, 90])
+runner = dict(type='EpochBasedRunner', max_epochs=100)
+checkpoint_config = dict(interval=10, max_keep_ckpts=2)
+log_config = dict(interval=100, hooks=[dict(type='TextLoggerHook')])
+dist_params = dict(backend='nccl')
+log_level = 'INFO'
+load_from = None
+resume_from = None
+workflow = [('train', 1)]
+initializer = dict(
+    samples_per_gpu=64,
+    gradinit_min_scale=0.01,
+    gradinit_lr=0.003,
+    gradinit_grad_clip=1.0,
+    overlap=0.2,
+    gradinit_gamma=10,
+    num_iters=100,
+    num_batch_splits=4,
+    gn_mul=1.0,
+    resnet=True,
+    tasks=('val1', 'train1', 'val2'),
+    eval_interval=100,
+    opt_target='gc_gn_sqrt')
+work_dir = './work_dir/init'
+gpu_ids = [0]
+
+2022-10-08 17:04:24,780 - mmcls - INFO - Set random seed to 0, deterministic: True
+2022-10-08 17:04:25,083 - mmcls - INFO - initialize ResNet with init_cfg [{'type': 'Kaiming', 'layer': ['Conv2d']}, {'type': 'Constant', 'val': 1, 'layer': ['_BatchNorm', 'GroupNorm']}]
+2022-10-08 17:04:25,348 - mmcls - INFO - initialize LinearClsHead with init_cfg {'type': 'Normal', 'layer': 'Linear', 'std': 0.01}
+Name of parameter - Initialization information
+
+backbone.conv1.weight - torch.Size([64, 3, 7, 7]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.bn1.weight - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.bn1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.0.conv1.weight - torch.Size([64, 64, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer1.0.bn1.weight - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.0.bn1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.0.conv2.weight - torch.Size([64, 64, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer1.0.bn2.weight - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.0.bn2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.0.conv3.weight - torch.Size([256, 64, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer1.0.bn3.weight - torch.Size([256]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer1.0.bn3.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.0.downsample.0.weight - torch.Size([256, 64, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer1.0.downsample.1.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.0.downsample.1.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.1.conv1.weight - torch.Size([64, 256, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer1.1.bn1.weight - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.1.bn1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.1.conv2.weight - torch.Size([64, 64, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer1.1.bn2.weight - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.1.bn2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.1.conv3.weight - torch.Size([256, 64, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer1.1.bn3.weight - torch.Size([256]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer1.1.bn3.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.2.conv1.weight - torch.Size([64, 256, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer1.2.bn1.weight - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.2.bn1.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.2.conv2.weight - torch.Size([64, 64, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer1.2.bn2.weight - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.2.bn2.bias - torch.Size([64]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer1.2.conv3.weight - torch.Size([256, 64, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer1.2.bn3.weight - torch.Size([256]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer1.2.bn3.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.0.conv1.weight - torch.Size([128, 256, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer2.0.bn1.weight - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.0.bn1.bias - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.0.conv2.weight - torch.Size([128, 128, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer2.0.bn2.weight - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.0.bn2.bias - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.0.conv3.weight - torch.Size([512, 128, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer2.0.bn3.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer2.0.bn3.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.0.downsample.0.weight - torch.Size([512, 256, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer2.0.downsample.1.weight - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.0.downsample.1.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.1.conv1.weight - torch.Size([128, 512, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer2.1.bn1.weight - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.1.bn1.bias - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.1.conv2.weight - torch.Size([128, 128, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer2.1.bn2.weight - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.1.bn2.bias - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.1.conv3.weight - torch.Size([512, 128, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer2.1.bn3.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer2.1.bn3.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.2.conv1.weight - torch.Size([128, 512, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer2.2.bn1.weight - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.2.bn1.bias - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.2.conv2.weight - torch.Size([128, 128, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer2.2.bn2.weight - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.2.bn2.bias - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.2.conv3.weight - torch.Size([512, 128, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer2.2.bn3.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer2.2.bn3.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.3.conv1.weight - torch.Size([128, 512, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer2.3.bn1.weight - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.3.bn1.bias - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.3.conv2.weight - torch.Size([128, 128, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer2.3.bn2.weight - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.3.bn2.bias - torch.Size([128]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer2.3.conv3.weight - torch.Size([512, 128, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer2.3.bn3.weight - torch.Size([512]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer2.3.bn3.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.0.conv1.weight - torch.Size([256, 512, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.0.bn1.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.0.bn1.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.0.conv2.weight - torch.Size([256, 256, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.0.bn2.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.0.bn2.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.0.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.0.bn3.weight - torch.Size([1024]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer3.0.bn3.bias - torch.Size([1024]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.0.downsample.0.weight - torch.Size([1024, 512, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.0.downsample.1.weight - torch.Size([1024]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.0.downsample.1.bias - torch.Size([1024]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.1.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.1.bn1.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.1.bn1.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.1.conv2.weight - torch.Size([256, 256, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.1.bn2.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.1.bn2.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.1.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.1.bn3.weight - torch.Size([1024]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer3.1.bn3.bias - torch.Size([1024]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.2.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.2.bn1.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.2.bn1.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.2.conv2.weight - torch.Size([256, 256, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.2.bn2.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.2.bn2.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.2.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.2.bn3.weight - torch.Size([1024]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer3.2.bn3.bias - torch.Size([1024]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.3.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.3.bn1.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.3.bn1.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.3.conv2.weight - torch.Size([256, 256, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.3.bn2.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.3.bn2.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.3.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.3.bn3.weight - torch.Size([1024]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer3.3.bn3.bias - torch.Size([1024]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.4.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.4.bn1.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.4.bn1.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.4.conv2.weight - torch.Size([256, 256, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.4.bn2.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.4.bn2.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.4.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.4.bn3.weight - torch.Size([1024]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer3.4.bn3.bias - torch.Size([1024]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.5.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.5.bn1.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.5.bn1.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.5.conv2.weight - torch.Size([256, 256, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.5.bn2.weight - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.5.bn2.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer3.5.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer3.5.bn3.weight - torch.Size([1024]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer3.5.bn3.bias - torch.Size([1024]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.0.conv1.weight - torch.Size([512, 1024, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer4.0.bn1.weight - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.0.bn1.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.0.conv2.weight - torch.Size([512, 512, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer4.0.bn2.weight - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.0.bn2.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.0.conv3.weight - torch.Size([2048, 512, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer4.0.bn3.weight - torch.Size([2048]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer4.0.bn3.bias - torch.Size([2048]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.0.downsample.0.weight - torch.Size([2048, 1024, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer4.0.downsample.1.weight - torch.Size([2048]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.0.downsample.1.bias - torch.Size([2048]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.1.conv1.weight - torch.Size([512, 2048, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer4.1.bn1.weight - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.1.bn1.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.1.conv2.weight - torch.Size([512, 512, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer4.1.bn2.weight - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.1.bn2.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.1.conv3.weight - torch.Size([2048, 512, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer4.1.bn3.weight - torch.Size([2048]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer4.1.bn3.bias - torch.Size([2048]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.2.conv1.weight - torch.Size([512, 2048, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer4.2.bn1.weight - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.2.bn1.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.2.conv2.weight - torch.Size([512, 512, 3, 3]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer4.2.bn2.weight - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.2.bn2.bias - torch.Size([512]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+backbone.layer4.2.conv3.weight - torch.Size([2048, 512, 1, 1]): 
+KaimingInit: a=0, mode=fan_out, nonlinearity=relu, distribution =normal, bias=0 
+
+backbone.layer4.2.bn3.weight - torch.Size([2048]): 
+Initialized by user-defined `init_weights` in ResNet  
+
+backbone.layer4.2.bn3.bias - torch.Size([2048]): 
+The value is the same before and after calling `init_weights` of ImageClassifier  
+
+head.fc.weight - torch.Size([1000, 2048]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+head.fc.bias - torch.Size([1000]): 
+NormalInit: mean=0, std=0.01, bias=0 
+2022-10-08 17:04:31,895 - mmcls - INFO - Initializing Network By GradCosine
+2022-10-08 17:04:31,897 - mmcls - INFO - ----Running the val1 mode
+2022-10-08 17:04:31,897 - mmcls - INFO - ----Running the val1 mode
+2022-10-08 17:04:41,277 - mmcls - INFO - GradCosine init no.0000, gradnorm: 4.668110370635986, gradcos : 0.2211839258670807, gradvar : 13.226095199584961, is_constraint : False
+2022-10-08 17:04:41,657 - mmcls - INFO - GradCosine init no.0001, gradnorm: 4.564145088195801, gradcos : 0.24959969520568848, gradvar : 12.117024421691895, is_constraint : False
+2022-10-08 17:04:41,993 - mmcls - INFO - GradCosine init no.0002, gradnorm: 4.801081657409668, gradcos : 0.22833029925823212, gradvar : 13.682062149047852, is_constraint : False
+2022-10-08 17:04:42,333 - mmcls - INFO - GradCosine init no.0003, gradnorm: 4.777111053466797, gradcos : 0.2633480429649353, gradvar : 12.865827560424805, is_constraint : False
+2022-10-08 17:04:42,902 - mmcls - INFO - GradCosine init no.0004, gradnorm: 4.776801109313965, gradcos : 0.23004131019115448, gradvar : 13.58375358581543, is_constraint : False
+2022-10-08 17:04:43,240 - mmcls - INFO - GradCosine init no.0005, gradnorm: 4.516150951385498, gradcos : 0.23073595762252808, gradvar : 12.302581787109375, is_constraint : False
+2022-10-08 17:04:43,576 - mmcls - INFO - GradCosine init no.0006, gradnorm: 4.740042686462402, gradcos : 0.24877169728279114, gradvar : 13.591043472290039, is_constraint : False
+2022-10-08 17:04:43,912 - mmcls - INFO - GradCosine init no.0007, gradnorm: 4.707135200500488, gradcos : 0.19370707869529724, gradvar : 14.0587797164917, is_constraint : False
+2022-10-08 17:04:44,249 - mmcls - INFO - GradCosine init no.0008, gradnorm: 4.751901149749756, gradcos : 0.24533598124980927, gradvar : 13.195383071899414, is_constraint : False
+2022-10-08 17:04:44,586 - mmcls - INFO - GradCosine init no.0009, gradnorm: 5.055833339691162, gradcos : 0.2423107922077179, gradvar : 15.297609329223633, is_constraint : False
+2022-10-08 17:04:44,926 - mmcls - INFO - GradCosine init no.0010, gradnorm: 4.70993185043335, gradcos : 0.2266329973936081, gradvar : 13.23893928527832, is_constraint : False
+2022-10-08 17:04:45,265 - mmcls - INFO - GradCosine init no.0011, gradnorm: 4.819427967071533, gradcos : 0.20922470092773438, gradvar : 13.99289608001709, is_constraint : False
+2022-10-08 17:04:45,604 - mmcls - INFO - GradCosine init no.0012, gradnorm: 4.817627906799316, gradcos : 0.22593532502651215, gradvar : 14.086674690246582, is_constraint : False
+2022-10-08 17:04:46,004 - mmcls - INFO - GradCosine init no.0013, gradnorm: 4.633066177368164, gradcos : 0.2572682797908783, gradvar : 12.269862174987793, is_constraint : False
+2022-10-08 17:04:46,496 - mmcls - INFO - GradCosine init no.0014, gradnorm: 4.849661350250244, gradcos : 0.20338550209999084, gradvar : 14.66450023651123, is_constraint : False
+2022-10-08 17:04:46,835 - mmcls - INFO - GradCosine init no.0015, gradnorm: 4.465424060821533, gradcos : 0.2214508354663849, gradvar : 12.020637512207031, is_constraint : False
+2022-10-08 17:04:47,178 - mmcls - INFO - GradCosine init no.0016, gradnorm: 4.657695293426514, gradcos : 0.20233723521232605, gradvar : 13.348773956298828, is_constraint : False
+2022-10-08 17:04:47,512 - mmcls - INFO - GradCosine init no.0017, gradnorm: 4.839359283447266, gradcos : 0.23362331092357635, gradvar : 14.875321388244629, is_constraint : False
+2022-10-08 17:04:47,851 - mmcls - INFO - GradCosine init no.0018, gradnorm: 4.747679710388184, gradcos : 0.24014389514923096, gradvar : 13.106245994567871, is_constraint : False
+2022-10-08 17:04:48,189 - mmcls - INFO - GradCosine init no.0019, gradnorm: 4.642294883728027, gradcos : 0.26416075229644775, gradvar : 12.526294708251953, is_constraint : False
+2022-10-08 17:04:48,529 - mmcls - INFO - GradCosine init no.0020, gradnorm: 4.696727275848389, gradcos : 0.25105082988739014, gradvar : 13.132390975952148, is_constraint : False
+2022-10-08 17:04:48,866 - mmcls - INFO - GradCosine init no.0021, gradnorm: 4.7595438957214355, gradcos : 0.2633824944496155, gradvar : 13.097789764404297, is_constraint : False
+2022-10-08 17:04:49,203 - mmcls - INFO - GradCosine init no.0022, gradnorm: 4.958992958068848, gradcos : 0.2637580633163452, gradvar : 14.822704315185547, is_constraint : False
+2022-10-08 17:04:49,599 - mmcls - INFO - GradCosine init no.0023, gradnorm: 4.845518112182617, gradcos : 0.22653961181640625, gradvar : 14.025989532470703, is_constraint : False
+2022-10-08 17:04:50,001 - mmcls - INFO - GradCosine init no.0024, gradnorm: 4.624444007873535, gradcos : 0.23939406871795654, gradvar : 12.829668998718262, is_constraint : False
+2022-10-08 17:04:50,337 - mmcls - INFO - GradCosine init no.0025, gradnorm: 4.701470375061035, gradcos : 0.24389879405498505, gradvar : 13.070022583007812, is_constraint : False
+2022-10-08 17:04:50,675 - mmcls - INFO - GradCosine init no.0026, gradnorm: 4.764172077178955, gradcos : 0.24512258172035217, gradvar : 13.365869522094727, is_constraint : False
+2022-10-08 17:04:51,011 - mmcls - INFO - GradCosine init no.0027, gradnorm: 4.64595890045166, gradcos : 0.2357257455587387, gradvar : 12.860864639282227, is_constraint : False
+2022-10-08 17:04:51,346 - mmcls - INFO - GradCosine init no.0028, gradnorm: 4.711009979248047, gradcos : 0.21676576137542725, gradvar : 13.638010025024414, is_constraint : False
+2022-10-08 17:04:51,683 - mmcls - INFO - GradCosine init no.0029, gradnorm: 4.818631649017334, gradcos : 0.23942556977272034, gradvar : 13.771065711975098, is_constraint : False
+2022-10-08 17:04:52,026 - mmcls - INFO - GradCosine init no.0030, gradnorm: 4.801692008972168, gradcos : 0.23550981283187866, gradvar : 13.638904571533203, is_constraint : False
+2022-10-08 17:04:52,365 - mmcls - INFO - GradCosine init no.0031, gradnorm: 4.832540988922119, gradcos : 0.2511011064052582, gradvar : 13.184616088867188, is_constraint : False
+2022-10-08 17:04:52,706 - mmcls - INFO - GradCosine init no.0032, gradnorm: 4.887021064758301, gradcos : 0.21782991290092468, gradvar : 14.748403549194336, is_constraint : False
+2022-10-08 17:04:53,179 - mmcls - INFO - GradCosine init no.0033, gradnorm: 4.727060317993164, gradcos : 0.2600398063659668, gradvar : 12.741302490234375, is_constraint : False
+2022-10-08 17:04:53,517 - mmcls - INFO - GradCosine init no.0034, gradnorm: 4.584596633911133, gradcos : 0.2419741004705429, gradvar : 12.325060844421387, is_constraint : False
+2022-10-08 17:04:53,855 - mmcls - INFO - GradCosine init no.0035, gradnorm: 4.650018692016602, gradcos : 0.26523834466934204, gradvar : 12.406980514526367, is_constraint : False
+2022-10-08 17:04:54,191 - mmcls - INFO - GradCosine init no.0036, gradnorm: 4.660923004150391, gradcos : 0.2292681783437729, gradvar : 12.924402236938477, is_constraint : False
+2022-10-08 17:04:54,533 - mmcls - INFO - GradCosine init no.0037, gradnorm: 4.587153434753418, gradcos : 0.22214893996715546, gradvar : 12.829309463500977, is_constraint : False
+2022-10-08 17:04:54,867 - mmcls - INFO - GradCosine init no.0038, gradnorm: 4.692243576049805, gradcos : 0.2877359092235565, gradvar : 12.095959663391113, is_constraint : False
+2022-10-08 17:04:55,201 - mmcls - INFO - GradCosine init no.0039, gradnorm: 4.899143218994141, gradcos : 0.2154030054807663, gradvar : 15.077033996582031, is_constraint : False
+2022-10-08 17:04:55,611 - mmcls - INFO - GradCosine init no.0040, gradnorm: 4.810625076293945, gradcos : 0.24385522305965424, gradvar : 13.674138069152832, is_constraint : False
+2022-10-08 17:04:56,140 - mmcls - INFO - GradCosine init no.0041, gradnorm: 4.6988725662231445, gradcos : 0.26218265295028687, gradvar : 12.510390281677246, is_constraint : False
+2022-10-08 17:04:56,539 - mmcls - INFO - GradCosine init no.0042, gradnorm: 4.932435035705566, gradcos : 0.24100099503993988, gradvar : 14.445834159851074, is_constraint : False
+2022-10-08 17:04:56,891 - mmcls - INFO - GradCosine init no.0043, gradnorm: 4.575428009033203, gradcos : 0.23084956407546997, gradvar : 12.676678657531738, is_constraint : False
+2022-10-08 17:04:57,226 - mmcls - INFO - GradCosine init no.0044, gradnorm: 4.604894638061523, gradcos : 0.24644307792186737, gradvar : 12.37277603149414, is_constraint : False
+2022-10-08 17:04:57,563 - mmcls - INFO - GradCosine init no.0045, gradnorm: 4.467687606811523, gradcos : 0.24143700301647186, gradvar : 11.7753324508667, is_constraint : False
+2022-10-08 17:04:58,052 - mmcls - INFO - GradCosine init no.0046, gradnorm: 4.78842306137085, gradcos : 0.22388367354869843, gradvar : 13.741080284118652, is_constraint : False
+2022-10-08 17:04:58,397 - mmcls - INFO - GradCosine init no.0047, gradnorm: 4.622668743133545, gradcos : 0.2240132987499237, gradvar : 12.716710090637207, is_constraint : False
+2022-10-08 17:04:58,816 - mmcls - INFO - GradCosine init no.0048, gradnorm: 4.525761604309082, gradcos : 0.22289220988750458, gradvar : 12.07142448425293, is_constraint : False
+2022-10-08 17:04:59,158 - mmcls - INFO - GradCosine init no.0049, gradnorm: 4.646908760070801, gradcos : 0.20583193004131317, gradvar : 13.229012489318848, is_constraint : False
+2022-10-08 17:04:59,551 - mmcls - INFO - GradCosine init no.0050, gradnorm: 4.754217147827148, gradcos : 0.2594675123691559, gradvar : 13.023089408874512, is_constraint : False
+2022-10-08 17:04:59,888 - mmcls - INFO - GradCosine init no.0051, gradnorm: 4.745062828063965, gradcos : 0.24558675289154053, gradvar : 12.903940200805664, is_constraint : False
+2022-10-08 17:05:00,277 - mmcls - INFO - GradCosine init no.0052, gradnorm: 4.8192219734191895, gradcos : 0.2221369743347168, gradvar : 14.362966537475586, is_constraint : False
+2022-10-08 17:05:00,613 - mmcls - INFO - GradCosine init no.0053, gradnorm: 4.719099998474121, gradcos : 0.22889076173305511, gradvar : 13.380265235900879, is_constraint : False
+2022-10-08 17:05:01,010 - mmcls - INFO - GradCosine init no.0054, gradnorm: 4.911646842956543, gradcos : 0.23873072862625122, gradvar : 14.706684112548828, is_constraint : False
+2022-10-08 17:05:01,349 - mmcls - INFO - GradCosine init no.0055, gradnorm: 4.822084426879883, gradcos : 0.19211380183696747, gradvar : 14.775193214416504, is_constraint : False
+2022-10-08 17:05:01,765 - mmcls - INFO - GradCosine init no.0056, gradnorm: 4.637504577636719, gradcos : 0.22369574010372162, gradvar : 13.188081741333008, is_constraint : False
+2022-10-08 17:05:02,105 - mmcls - INFO - GradCosine init no.0057, gradnorm: 4.646810531616211, gradcos : 0.21245335042476654, gradvar : 13.28966236114502, is_constraint : False
+2022-10-08 17:05:02,483 - mmcls - INFO - GradCosine init no.0058, gradnorm: 4.839753150939941, gradcos : 0.2545851171016693, gradvar : 13.630599975585938, is_constraint : False
+2022-10-08 17:05:02,830 - mmcls - INFO - GradCosine init no.0059, gradnorm: 4.788228988647461, gradcos : 0.24366244673728943, gradvar : 13.223271369934082, is_constraint : False
+2022-10-08 17:05:03,169 - mmcls - INFO - GradCosine init no.0060, gradnorm: 4.494960784912109, gradcos : 0.21008515357971191, gradvar : 12.69749927520752, is_constraint : False
+2022-10-08 17:05:03,574 - mmcls - INFO - GradCosine init no.0061, gradnorm: 4.709371089935303, gradcos : 0.22634980082511902, gradvar : 13.393875122070312, is_constraint : False
+2022-10-08 17:05:03,921 - mmcls - INFO - GradCosine init no.0062, gradnorm: 4.782472133636475, gradcos : 0.23635995388031006, gradvar : 13.66540813446045, is_constraint : False
+2022-10-08 17:05:04,348 - mmcls - INFO - GradCosine init no.0063, gradnorm: 4.733724594116211, gradcos : 0.21425148844718933, gradvar : 13.590909957885742, is_constraint : False
+2022-10-08 17:05:04,686 - mmcls - INFO - GradCosine init no.0064, gradnorm: 4.706716060638428, gradcos : 0.22515611350536346, gradvar : 13.590736389160156, is_constraint : False
+2022-10-08 17:05:05,101 - mmcls - INFO - GradCosine init no.0065, gradnorm: 4.728090763092041, gradcos : 0.2249581217765808, gradvar : 13.55791187286377, is_constraint : False
+2022-10-08 17:05:05,442 - mmcls - INFO - GradCosine init no.0066, gradnorm: 4.745136260986328, gradcos : 0.22022277116775513, gradvar : 13.399620056152344, is_constraint : False
+2022-10-08 17:05:05,778 - mmcls - INFO - GradCosine init no.0067, gradnorm: 4.677955150604248, gradcos : 0.2587939202785492, gradvar : 12.495628356933594, is_constraint : False
+2022-10-08 17:05:06,113 - mmcls - INFO - GradCosine init no.0068, gradnorm: 4.6550774574279785, gradcos : 0.23179619014263153, gradvar : 12.725357055664062, is_constraint : False
+2022-10-08 17:05:06,452 - mmcls - INFO - GradCosine init no.0069, gradnorm: 5.002120494842529, gradcos : 0.3291708827018738, gradvar : 12.828027725219727, is_constraint : False
+2022-10-08 17:05:06,792 - mmcls - INFO - GradCosine init no.0070, gradnorm: 4.618896961212158, gradcos : 0.22956666350364685, gradvar : 12.657785415649414, is_constraint : False
+2022-10-08 17:05:07,128 - mmcls - INFO - GradCosine init no.0071, gradnorm: 4.795822620391846, gradcos : 0.27290576696395874, gradvar : 13.156837463378906, is_constraint : False
+2022-10-08 17:05:07,468 - mmcls - INFO - GradCosine init no.0072, gradnorm: 4.675433158874512, gradcos : 0.19148346781730652, gradvar : 13.673723220825195, is_constraint : False
+2022-10-08 17:05:07,806 - mmcls - INFO - GradCosine init no.0073, gradnorm: 4.895755767822266, gradcos : 0.25116151571273804, gradvar : 13.860601425170898, is_constraint : False
+2022-10-08 17:05:08,146 - mmcls - INFO - GradCosine init no.0074, gradnorm: 4.86414909362793, gradcos : 0.24169127643108368, gradvar : 14.294795989990234, is_constraint : False
+2022-10-08 17:05:08,510 - mmcls - INFO - GradCosine init no.0075, gradnorm: 4.783579349517822, gradcos : 0.2989872395992279, gradvar : 12.419204711914062, is_constraint : False
+2022-10-08 17:05:09,001 - mmcls - INFO - GradCosine init no.0076, gradnorm: 4.756877899169922, gradcos : 0.22248868644237518, gradvar : 13.642925262451172, is_constraint : False
+2022-10-08 17:05:09,339 - mmcls - INFO - GradCosine init no.0077, gradnorm: 4.8746819496154785, gradcos : 0.2216404676437378, gradvar : 14.407364845275879, is_constraint : False
+2022-10-08 17:05:09,675 - mmcls - INFO - GradCosine init no.0078, gradnorm: 4.7120561599731445, gradcos : 0.22589457035064697, gradvar : 13.221403121948242, is_constraint : False
+2022-10-08 17:05:10,011 - mmcls - INFO - GradCosine init no.0079, gradnorm: 4.670515060424805, gradcos : 0.24952992796897888, gradvar : 12.868671417236328, is_constraint : False
+2022-10-08 17:05:10,348 - mmcls - INFO - GradCosine init no.0080, gradnorm: 4.8955583572387695, gradcos : 0.2733578681945801, gradvar : 13.599011421203613, is_constraint : False
+2022-10-08 17:05:10,685 - mmcls - INFO - GradCosine init no.0081, gradnorm: 4.814343452453613, gradcos : 0.2579807937145233, gradvar : 13.430522918701172, is_constraint : False
+2022-10-08 17:05:11,021 - mmcls - INFO - GradCosine init no.0082, gradnorm: 4.664247512817383, gradcos : 0.2443195879459381, gradvar : 12.605161666870117, is_constraint : False
+2022-10-08 17:05:11,356 - mmcls - INFO - GradCosine init no.0083, gradnorm: 4.679941654205322, gradcos : 0.23078398406505585, gradvar : 13.218976974487305, is_constraint : False
+2022-10-08 17:05:11,683 - mmcls - INFO - GradCosine init no.0084, gradnorm: 4.614588737487793, gradcos : 0.23305293917655945, gradvar : 12.256617546081543, is_constraint : False
+2022-10-08 17:05:12,038 - mmcls - INFO - GradCosine init no.0085, gradnorm: 4.686031341552734, gradcos : 0.2340938299894333, gradvar : 12.836921691894531, is_constraint : False
+2022-10-08 17:05:12,552 - mmcls - INFO - GradCosine init no.0086, gradnorm: 4.739283561706543, gradcos : 0.26104676723480225, gradvar : 12.646114349365234, is_constraint : False
+2022-10-08 17:05:12,888 - mmcls - INFO - GradCosine init no.0087, gradnorm: 4.682192802429199, gradcos : 0.210126131772995, gradvar : 13.329242706298828, is_constraint : False
+2022-10-08 17:05:13,226 - mmcls - INFO - GradCosine init no.0088, gradnorm: 4.716597557067871, gradcos : 0.25543317198753357, gradvar : 13.145923614501953, is_constraint : False
+2022-10-08 17:05:13,564 - mmcls - INFO - GradCosine init no.0089, gradnorm: 4.693876266479492, gradcos : 0.23391234874725342, gradvar : 13.23484992980957, is_constraint : False
+2022-10-08 17:05:13,900 - mmcls - INFO - GradCosine init no.0090, gradnorm: 4.7202043533325195, gradcos : 0.21256789565086365, gradvar : 14.072137832641602, is_constraint : False
+2022-10-08 17:05:14,235 - mmcls - INFO - GradCosine init no.0091, gradnorm: 4.662715435028076, gradcos : 0.2419617772102356, gradvar : 12.712042808532715, is_constraint : False
+2022-10-08 17:05:14,571 - mmcls - INFO - GradCosine init no.0092, gradnorm: 4.632660388946533, gradcos : 0.20251131057739258, gradvar : 13.182962417602539, is_constraint : False
+2022-10-08 17:05:14,909 - mmcls - INFO - GradCosine init no.0093, gradnorm: 4.612608909606934, gradcos : 0.23436659574508667, gradvar : 12.749092102050781, is_constraint : False
+2022-10-08 17:05:15,244 - mmcls - INFO - GradCosine init no.0094, gradnorm: 4.5951738357543945, gradcos : 0.20694926381111145, gradvar : 13.265933990478516, is_constraint : False
+2022-10-08 17:05:15,682 - mmcls - INFO - GradCosine init no.0095, gradnorm: 4.551932334899902, gradcos : 0.23423342406749725, gradvar : 12.342058181762695, is_constraint : False
+2022-10-08 17:05:16,080 - mmcls - INFO - GradCosine init no.0096, gradnorm: 4.766161918640137, gradcos : 0.22372812032699585, gradvar : 13.688776016235352, is_constraint : False
+2022-10-08 17:05:16,416 - mmcls - INFO - GradCosine init no.0097, gradnorm: 4.45543909072876, gradcos : 0.2342114895582199, gradvar : 11.683004379272461, is_constraint : False
+2022-10-08 17:05:16,752 - mmcls - INFO - GradCosine init no.0098, gradnorm: 4.779672622680664, gradcos : 0.27086731791496277, gradvar : 12.47911262512207, is_constraint : False
+2022-10-08 17:05:17,089 - mmcls - INFO - GradCosine init no.0099, gradnorm: 4.7185139656066895, gradcos : 0.25090378522872925, gradvar : 12.84815502166748, is_constraint : False
+2022-10-08 17:05:17,090 - mmcls - INFO - ----Running the train1 mode
+2022-10-08 17:05:17,091 - mmcls - INFO - ----Running the train mode
+2022-10-08 17:05:21,827 - mmcls - INFO - GradCosine init no.0000, gradnorm: 4.668110370635986, gradcos : 0.2211839258670807, gradvar : 13.226095199584961, is_constraint : False
+2022-10-08 17:05:25,643 - mmcls - INFO - GradCosine init no.0001, gradnorm: 4.583268642425537, gradcos : 0.25010740756988525, gradvar : 12.210946083068848, is_constraint : False
+2022-10-08 17:05:29,787 - mmcls - INFO - GradCosine init no.0002, gradnorm: 4.851508617401123, gradcos : 0.22771134972572327, gradvar : 13.977554321289062, is_constraint : False
+2022-10-08 17:05:33,545 - mmcls - INFO - GradCosine init no.0003, gradnorm: 4.8492207527160645, gradcos : 0.2641696333885193, gradvar : 13.23831558227539, is_constraint : False
+2022-10-08 17:05:37,260 - mmcls - INFO - GradCosine init no.0004, gradnorm: 4.868623733520508, gradcos : 0.2305600941181183, gradvar : 14.100736618041992, is_constraint : False
+2022-10-08 17:05:41,011 - mmcls - INFO - GradCosine init no.0005, gradnorm: 4.623144626617432, gradcos : 0.2313304990530014, gradvar : 12.891007423400879, is_constraint : False
+2022-10-08 17:05:44,299 - mmcls - INFO - GradCosine init no.0006, gradnorm: 4.880110740661621, gradcos : 0.25026360154151917, gradvar : 14.377155303955078, is_constraint : False
+2022-10-08 17:05:48,323 - mmcls - INFO - GradCosine init no.0007, gradnorm: 4.871514320373535, gradcos : 0.1898658275604248, gradvar : 15.142289161682129, is_constraint : False
+2022-10-08 17:05:51,962 - mmcls - INFO - GradCosine init no.0008, gradnorm: 4.937201976776123, gradcos : 0.24503538012504578, gradvar : 14.247159004211426, is_constraint : False
+2022-10-08 17:05:55,779 - mmcls - INFO - GradCosine init no.0009, gradnorm: 5.3028693199157715, gradcos : 0.24279165267944336, gradvar : 16.813304901123047, is_constraint : False
+2022-10-08 17:05:59,504 - mmcls - INFO - GradCosine init no.0010, gradnorm: 4.938467025756836, gradcos : 0.22474169731140137, gradvar : 14.588577270507812, is_constraint : False
+2022-10-08 17:06:03,195 - mmcls - INFO - GradCosine init no.0011, gradnorm: 5.080373764038086, gradcos : 0.20894138514995575, gradvar : 15.551689147949219, is_constraint : False
+2022-10-08 17:06:08,118 - mmcls - INFO - GradCosine init no.0012, gradnorm: 5.109315872192383, gradcos : 0.2247011661529541, gradvar : 15.900324821472168, is_constraint : False
+2022-10-08 17:06:13,395 - mmcls - INFO - GradCosine init no.0013, gradnorm: 4.917572975158691, gradcos : 0.2563614547252655, gradvar : 13.841533660888672, is_constraint : False
+2022-10-08 17:06:18,231 - mmcls - INFO - GradCosine init no.0014, gradnorm: 5.1907172203063965, gradcos : 0.199350044131279, gradvar : 16.884565353393555, is_constraint : False
+2022-10-08 17:06:23,112 - mmcls - INFO - GradCosine init no.0015, gradnorm: 4.767550468444824, gradcos : 0.2203429788351059, gradvar : 13.717082977294922, is_constraint : False
+2022-10-08 17:06:27,003 - mmcls - INFO - GradCosine init no.0016, gradnorm: 5.0122246742248535, gradcos : 0.19876810908317566, gradvar : 15.521796226501465, is_constraint : False
+2022-10-08 17:06:30,790 - mmcls - INFO - GradCosine init no.0017, gradnorm: 5.273982048034668, gradcos : 0.23233412206172943, gradvar : 17.78543472290039, is_constraint : False
+2022-10-08 17:06:34,580 - mmcls - INFO - GradCosine init no.0018, gradnorm: 5.167818069458008, gradcos : 0.23880767822265625, gradvar : 15.543245315551758, is_constraint : False
+2022-10-08 17:06:38,349 - mmcls - INFO - GradCosine init no.0019, gradnorm: 5.08087158203125, gradcos : 0.26850059628486633, gradvar : 14.911661148071289, is_constraint : False
+2022-10-08 17:06:42,195 - mmcls - INFO - GradCosine init no.0020, gradnorm: 5.153268337249756, gradcos : 0.253167986869812, gradvar : 15.791864395141602, is_constraint : False
+2022-10-08 17:06:46,071 - mmcls - INFO - GradCosine init no.0021, gradnorm: 5.25547981262207, gradcos : 0.26396456360816956, gradvar : 15.93493938446045, is_constraint : False
+2022-10-08 17:06:49,849 - mmcls - INFO - GradCosine init no.0022, gradnorm: 5.545701026916504, gradcos : 0.2649102807044983, gradvar : 18.591468811035156, is_constraint : False
+2022-10-08 17:06:54,045 - mmcls - INFO - GradCosine init no.0023, gradnorm: 5.4183220863342285, gradcos : 0.22403161227703094, gradvar : 17.57905387878418, is_constraint : False
+2022-10-08 17:06:58,243 - mmcls - INFO - GradCosine init no.0024, gradnorm: 5.15286922454834, gradcos : 0.2388102412223816, gradvar : 15.978374481201172, is_constraint : False
+2022-10-08 17:07:02,734 - mmcls - INFO - GradCosine init no.0025, gradnorm: 5.270071506500244, gradcos : 0.2460319995880127, gradvar : 16.406381607055664, is_constraint : False
+2022-10-08 17:07:07,818 - mmcls - INFO - GradCosine init no.0026, gradnorm: 5.365145206451416, gradcos : 0.2418011873960495, gradvar : 17.018888473510742, is_constraint : False
+2022-10-08 17:07:12,624 - mmcls - INFO - GradCosine init no.0027, gradnorm: 5.285699844360352, gradcos : 0.233526811003685, gradvar : 16.6829891204834, is_constraint : False
+2022-10-08 17:07:17,572 - mmcls - INFO - GradCosine init no.0028, gradnorm: 5.379631042480469, gradcos : 0.21433520317077637, gradvar : 17.868669509887695, is_constraint : False
+2022-10-08 17:07:22,624 - mmcls - INFO - GradCosine init no.0029, gradnorm: 5.563607215881348, gradcos : 0.24380211532115936, gradvar : 18.251224517822266, is_constraint : False
+2022-10-08 17:07:27,559 - mmcls - INFO - GradCosine init no.0030, gradnorm: 5.552985191345215, gradcos : 0.23728351294994354, gradvar : 18.25447654724121, is_constraint : False
+2022-10-08 17:07:32,391 - mmcls - INFO - GradCosine init no.0031, gradnorm: 5.607488632202148, gradcos : 0.25527888536453247, gradvar : 17.62590980529785, is_constraint : False
+2022-10-08 17:07:37,416 - mmcls - INFO - GradCosine init no.0032, gradnorm: 5.739521026611328, gradcos : 0.21513406932353973, gradvar : 20.45012664794922, is_constraint : False
+2022-10-08 17:07:42,471 - mmcls - INFO - GradCosine init no.0033, gradnorm: 5.565709114074707, gradcos : 0.26683974266052246, gradvar : 17.481971740722656, is_constraint : False
+2022-10-08 17:07:46,874 - mmcls - INFO - GradCosine init no.0034, gradnorm: 5.391345024108887, gradcos : 0.24498575925827026, gradvar : 16.91021156311035, is_constraint : False
+2022-10-08 17:07:50,726 - mmcls - INFO - GradCosine init no.0035, gradnorm: 5.490462303161621, gradcos : 0.254757821559906, gradvar : 17.50833511352539, is_constraint : False
+2022-10-08 17:07:54,509 - mmcls - INFO - GradCosine init no.0036, gradnorm: 5.50792121887207, gradcos : 0.22980996966362, gradvar : 18.041458129882812, is_constraint : False
+2022-10-08 17:07:58,330 - mmcls - INFO - GradCosine init no.0037, gradnorm: 5.457395553588867, gradcos : 0.21708469092845917, gradvar : 18.390409469604492, is_constraint : False
+2022-10-08 17:08:02,111 - mmcls - INFO - GradCosine init no.0038, gradnorm: 5.653712749481201, gradcos : 0.2963680326938629, gradvar : 17.376157760620117, is_constraint : False
+2022-10-08 17:08:05,905 - mmcls - INFO - GradCosine init no.0039, gradnorm: 5.908199310302734, gradcos : 0.21233484148979187, gradvar : 21.939647674560547, is_constraint : False
+2022-10-08 17:08:09,677 - mmcls - INFO - GradCosine init no.0040, gradnorm: 5.807540416717529, gradcos : 0.24113032221794128, gradvar : 19.963123321533203, is_constraint : False
+2022-10-08 17:08:13,359 - mmcls - INFO - GradCosine init no.0041, gradnorm: 5.7763261795043945, gradcos : 0.26997482776641846, gradvar : 18.69916343688965, is_constraint : False
+2022-10-08 17:08:16,629 - mmcls - INFO - GradCosine init no.0042, gradnorm: 6.072490215301514, gradcos : 0.23916468024253845, gradvar : 21.921607971191406, is_constraint : False
+2022-10-08 17:08:19,622 - mmcls - INFO - GradCosine init no.0043, gradnorm: 5.550980567932129, gradcos : 0.23429076373577118, gradvar : 18.621795654296875, is_constraint : False
+2022-10-08 17:08:22,594 - mmcls - INFO - GradCosine init no.0044, gradnorm: 5.720300197601318, gradcos : 0.2499791383743286, gradvar : 19.040760040283203, is_constraint : False
+2022-10-08 17:08:26,106 - mmcls - INFO - GradCosine init no.0045, gradnorm: 5.502813339233398, gradcos : 0.24724125862121582, gradvar : 17.749313354492188, is_constraint : False
+2022-10-08 17:08:29,835 - mmcls - INFO - GradCosine init no.0046, gradnorm: 6.045421600341797, gradcos : 0.2173900306224823, gradvar : 21.94011688232422, is_constraint : False
+2022-10-08 17:08:33,573 - mmcls - INFO - GradCosine init no.0047, gradnorm: 5.779149532318115, gradcos : 0.21804718673229218, gradvar : 20.070999145507812, is_constraint : False
+2022-10-08 17:08:38,317 - mmcls - INFO - GradCosine init no.0048, gradnorm: 5.679953098297119, gradcos : 0.21368634700775146, gradvar : 19.225868225097656, is_constraint : False
+2022-10-08 17:08:42,934 - mmcls - INFO - GradCosine init no.0049, gradnorm: 5.9036173820495605, gradcos : 0.1964394450187683, gradvar : 21.5390682220459, is_constraint : False
+2022-10-08 17:08:48,002 - mmcls - INFO - GradCosine init no.0050, gradnorm: 6.1025390625, gradcos : 0.2593514025211334, gradvar : 21.646760940551758, is_constraint : False
+2022-10-08 17:08:53,142 - mmcls - INFO - GradCosine init no.0051, gradnorm: 6.139835834503174, gradcos : 0.2428251951932907, gradvar : 21.655590057373047, is_constraint : False
+2022-10-08 17:08:58,064 - mmcls - INFO - GradCosine init no.0052, gradnorm: 6.285943031311035, gradcos : 0.22616593539714813, gradvar : 24.505359649658203, is_constraint : False
+2022-10-08 17:09:03,060 - mmcls - INFO - GradCosine init no.0053, gradnorm: 6.095195770263672, gradcos : 0.22332656383514404, gradvar : 22.450904846191406, is_constraint : False
+2022-10-08 17:09:07,056 - mmcls - INFO - GradCosine init no.0054, gradnorm: 6.552132606506348, gradcos : 0.25147902965545654, gradvar : 25.792335510253906, is_constraint : False
+2022-10-08 17:09:10,865 - mmcls - INFO - GradCosine init no.0055, gradnorm: 6.385358810424805, gradcos : 0.1749001145362854, gradvar : 26.43834686279297, is_constraint : False
+2022-10-08 17:09:14,657 - mmcls - INFO - GradCosine init no.0056, gradnorm: 6.117116451263428, gradcos : 0.22112268209457397, gradvar : 23.101024627685547, is_constraint : False
+2022-10-08 17:09:18,436 - mmcls - INFO - GradCosine init no.0057, gradnorm: 6.149474143981934, gradcos : 0.2047741413116455, gradvar : 23.49701690673828, is_constraint : False
+2022-10-08 17:09:22,362 - mmcls - INFO - GradCosine init no.0058, gradnorm: 6.504733562469482, gradcos : 0.26036331057548523, gradvar : 24.559284210205078, is_constraint : False
+2022-10-08 17:09:26,170 - mmcls - INFO - GradCosine init no.0059, gradnorm: 6.487270355224609, gradcos : 0.24415791034698486, gradvar : 24.16440773010254, is_constraint : False
+2022-10-08 17:09:30,267 - mmcls - INFO - GradCosine init no.0060, gradnorm: 5.989021301269531, gradcos : 0.2003021091222763, gradvar : 22.916946411132812, is_constraint : False
+2022-10-08 17:09:34,041 - mmcls - INFO - GradCosine init no.0061, gradnorm: 6.380345344543457, gradcos : 0.21851158142089844, gradvar : 24.95867919921875, is_constraint : False
+2022-10-08 17:09:38,023 - mmcls - INFO - GradCosine init no.0062, gradnorm: 6.6077399253845215, gradcos : 0.2320750653743744, gradvar : 26.312318801879883, is_constraint : False
+2022-10-08 17:09:41,789 - mmcls - INFO - GradCosine init no.0063, gradnorm: 6.431090831756592, gradcos : 0.21179775893688202, gradvar : 25.02908706665039, is_constraint : False
+2022-10-08 17:09:46,110 - mmcls - INFO - GradCosine init no.0064, gradnorm: 6.472977638244629, gradcos : 0.2277056872844696, gradvar : 25.671823501586914, is_constraint : False
+2022-10-08 17:09:51,046 - mmcls - INFO - GradCosine init no.0065, gradnorm: 6.579096794128418, gradcos : 0.22800076007843018, gradvar : 26.094833374023438, is_constraint : False
+2022-10-08 17:09:56,164 - mmcls - INFO - GradCosine init no.0066, gradnorm: 6.616754531860352, gradcos : 0.21160471439361572, gradvar : 26.328079223632812, is_constraint : False
+2022-10-08 17:10:01,396 - mmcls - INFO - GradCosine init no.0067, gradnorm: 6.622580528259277, gradcos : 0.2490752935409546, gradvar : 25.357643127441406, is_constraint : False
+2022-10-08 17:10:06,526 - mmcls - INFO - GradCosine init no.0068, gradnorm: 6.491641998291016, gradcos : 0.21835379302501678, gradvar : 25.17527961730957, is_constraint : False
+2022-10-08 17:10:11,593 - mmcls - INFO - GradCosine init no.0069, gradnorm: 7.150717735290527, gradcos : 0.33760711550712585, gradvar : 26.008403778076172, is_constraint : False
+2022-10-08 17:10:16,671 - mmcls - INFO - GradCosine init no.0070, gradnorm: 6.523426055908203, gradcos : 0.22361108660697937, gradvar : 25.416515350341797, is_constraint : False
+2022-10-08 17:10:21,783 - mmcls - INFO - GradCosine init no.0071, gradnorm: 6.905130863189697, gradcos : 0.29741477966308594, gradvar : 26.47774314880371, is_constraint : False
+2022-10-08 17:10:27,146 - mmcls - INFO - GradCosine init no.0072, gradnorm: 6.786972522735596, gradcos : 0.1747661530971527, gradvar : 29.47836685180664, is_constraint : False
+2022-10-08 17:10:32,139 - mmcls - INFO - GradCosine init no.0073, gradnorm: 7.179190635681152, gradcos : 0.24983029067516327, gradvar : 29.689416885375977, is_constraint : False
+2022-10-08 17:10:35,982 - mmcls - INFO - GradCosine init no.0074, gradnorm: 7.1494059562683105, gradcos : 0.24214446544647217, gradvar : 31.104217529296875, is_constraint : False
+2022-10-08 17:10:39,769 - mmcls - INFO - GradCosine init no.0075, gradnorm: 6.954250335693359, gradcos : 0.29171618819236755, gradvar : 26.549375534057617, is_constraint : False
+2022-10-08 17:10:43,456 - mmcls - INFO - GradCosine init no.0076, gradnorm: 7.087377548217773, gradcos : 0.2053593397140503, gradvar : 30.814804077148438, is_constraint : False
+2022-10-08 17:10:47,215 - mmcls - INFO - GradCosine init no.0077, gradnorm: 7.36301326751709, gradcos : 0.21418970823287964, gradvar : 33.53624725341797, is_constraint : False
+2022-10-08 17:10:50,401 - mmcls - INFO - GradCosine init no.0078, gradnorm: 7.124222278594971, gradcos : 0.22854100167751312, gradvar : 30.103363037109375, is_constraint : False
+2022-10-08 17:10:53,429 - mmcls - INFO - GradCosine init no.0079, gradnorm: 7.000580787658691, gradcos : 0.2658073306083679, gradvar : 28.608821868896484, is_constraint : False
+2022-10-08 17:10:56,382 - mmcls - INFO - GradCosine init no.0080, gradnorm: 7.5172624588012695, gradcos : 0.309762179851532, gradvar : 30.39788246154785, is_constraint : False
+2022-10-08 17:10:59,158 - mmcls - INFO - GradCosine init no.0081, gradnorm: 7.228609085083008, gradcos : 0.25514155626296997, gradvar : 30.3101749420166, is_constraint : False
+2022-10-08 17:11:02,100 - mmcls - INFO - GradCosine init no.0082, gradnorm: 7.131991863250732, gradcos : 0.2452174872159958, gradvar : 29.32329750061035, is_constraint : False
+2022-10-08 17:11:05,031 - mmcls - INFO - GradCosine init no.0083, gradnorm: 7.059207916259766, gradcos : 0.22270455956459045, gradvar : 30.553421020507812, is_constraint : False
+2022-10-08 17:11:07,913 - mmcls - INFO - GradCosine init no.0084, gradnorm: 7.0247955322265625, gradcos : 0.21852532029151917, gradvar : 28.8204402923584, is_constraint : False
+2022-10-08 17:11:12,395 - mmcls - INFO - GradCosine init no.0085, gradnorm: 7.275545120239258, gradcos : 0.2215234935283661, gradvar : 31.580900192260742, is_constraint : False
+2022-10-08 17:11:17,550 - mmcls - INFO - GradCosine init no.0086, gradnorm: 7.373227596282959, gradcos : 0.2615259289741516, gradvar : 30.59111785888672, is_constraint : False
+2022-10-08 17:11:22,351 - mmcls - INFO - GradCosine init no.0087, gradnorm: 7.406314849853516, gradcos : 0.19442754983901978, gradvar : 33.955142974853516, is_constraint : False
+2022-10-08 17:11:27,242 - mmcls - INFO - GradCosine init no.0088, gradnorm: 7.51251220703125, gradcos : 0.26657986640930176, gradvar : 33.346923828125, is_constraint : False
+2022-10-08 17:11:32,306 - mmcls - INFO - GradCosine init no.0089, gradnorm: 7.511254787445068, gradcos : 0.22967319190502167, gradvar : 34.01390838623047, is_constraint : False
+2022-10-08 17:11:37,517 - mmcls - INFO - GradCosine init no.0090, gradnorm: 7.730554580688477, gradcos : 0.20880961418151855, gradvar : 37.91410827636719, is_constraint : False
+2022-10-08 17:11:42,486 - mmcls - INFO - GradCosine init no.0091, gradnorm: 7.4412126541137695, gradcos : 0.24259565770626068, gradvar : 32.16973114013672, is_constraint : False
+2022-10-08 17:11:47,593 - mmcls - INFO - GradCosine init no.0092, gradnorm: 7.4340057373046875, gradcos : 0.1943119764328003, gradvar : 34.305397033691406, is_constraint : False
+2022-10-08 17:11:52,544 - mmcls - INFO - GradCosine init no.0093, gradnorm: 7.631327152252197, gradcos : 0.2604987323284149, gradvar : 34.12268829345703, is_constraint : False
+2022-10-08 17:11:57,265 - mmcls - INFO - GradCosine init no.0094, gradnorm: 7.520176887512207, gradcos : 0.19079838693141937, gradvar : 36.62239456176758, is_constraint : False
+2022-10-08 17:12:01,318 - mmcls - INFO - GradCosine init no.0095, gradnorm: 7.380666732788086, gradcos : 0.22880105674266815, gradvar : 32.703792572021484, is_constraint : False
+2022-10-08 17:12:05,104 - mmcls - INFO - GradCosine init no.0096, gradnorm: 8.022911071777344, gradcos : 0.22604402899742126, gradvar : 39.181400299072266, is_constraint : False
+2022-10-08 17:12:08,884 - mmcls - INFO - GradCosine init no.0097, gradnorm: 7.297368049621582, gradcos : 0.23659324645996094, gradvar : 31.019912719726562, is_constraint : False
+2022-10-08 17:12:12,637 - mmcls - INFO - GradCosine init no.0098, gradnorm: 8.203505516052246, gradcos : 0.2827073931694031, gradvar : 35.666664123535156, is_constraint : False
+2022-10-08 17:12:16,429 - mmcls - INFO - GradCosine init no.0099, gradnorm: 7.925049781799316, gradcos : 0.25550827383995056, gradvar : 35.701297760009766, is_constraint : False
+2022-10-08 17:12:19,844 - mmcls - INFO - ----Running the val2 mode
+2022-10-08 17:12:19,844 - mmcls - INFO - ----Running the val2 mode
+2022-10-08 17:12:21,069 - mmcls - INFO - GradCosine init no.0000, gradnorm: 7.867239475250244, gradcos : 0.22283783555030823, gradvar : 39.05302810668945, is_constraint : False
+2022-10-08 17:12:21,588 - mmcls - INFO - GradCosine init no.0001, gradnorm: 8.61667251586914, gradcos : 0.26263660192489624, gradvar : 41.65773010253906, is_constraint : False
+2022-10-08 17:12:21,927 - mmcls - INFO - GradCosine init no.0002, gradnorm: 7.966885566711426, gradcos : 0.21353968977928162, gradvar : 38.605194091796875, is_constraint : False
+2022-10-08 17:12:22,267 - mmcls - INFO - GradCosine init no.0003, gradnorm: 8.374767303466797, gradcos : 0.2854148745536804, gradvar : 37.61653518676758, is_constraint : False
+2022-10-08 17:12:22,603 - mmcls - INFO - GradCosine init no.0004, gradnorm: 7.59101676940918, gradcos : 0.18768274784088135, gradvar : 36.603302001953125, is_constraint : False
+2022-10-08 17:12:22,940 - mmcls - INFO - GradCosine init no.0005, gradnorm: 8.658683776855469, gradcos : 0.3117843270301819, gradvar : 40.9842643737793, is_constraint : False
+2022-10-08 17:12:23,269 - mmcls - INFO - GradCosine init no.0006, gradnorm: 7.834020137786865, gradcos : 0.24508652091026306, gradvar : 36.84613037109375, is_constraint : False
+2022-10-08 17:12:23,609 - mmcls - INFO - GradCosine init no.0007, gradnorm: 7.948232173919678, gradcos : 0.19895979762077332, gradvar : 38.49132537841797, is_constraint : False
+2022-10-08 17:12:23,947 - mmcls - INFO - GradCosine init no.0008, gradnorm: 7.8500823974609375, gradcos : 0.2168186902999878, gradvar : 36.74675369262695, is_constraint : False
+2022-10-08 17:12:24,284 - mmcls - INFO - GradCosine init no.0009, gradnorm: 7.801374912261963, gradcos : 0.23152676224708557, gradvar : 35.388343811035156, is_constraint : False
+2022-10-08 17:12:24,710 - mmcls - INFO - GradCosine init no.0010, gradnorm: 8.056951522827148, gradcos : 0.2677353620529175, gradvar : 36.937164306640625, is_constraint : False
+2022-10-08 17:12:25,144 - mmcls - INFO - GradCosine init no.0011, gradnorm: 8.420343399047852, gradcos : 0.23093166947364807, gradvar : 44.19184112548828, is_constraint : False
+2022-10-08 17:12:25,481 - mmcls - INFO - GradCosine init no.0012, gradnorm: 7.56870174407959, gradcos : 0.22651493549346924, gradvar : 34.21642303466797, is_constraint : False
+2022-10-08 17:12:25,820 - mmcls - INFO - GradCosine init no.0013, gradnorm: 8.320072174072266, gradcos : 0.17171244323253632, gradvar : 44.556732177734375, is_constraint : False
+2022-10-08 17:12:26,159 - mmcls - INFO - GradCosine init no.0014, gradnorm: 8.06102180480957, gradcos : 0.2496880739927292, gradvar : 37.179473876953125, is_constraint : False
+2022-10-08 17:12:26,497 - mmcls - INFO - GradCosine init no.0015, gradnorm: 7.920460224151611, gradcos : 0.23072439432144165, gradvar : 37.08155059814453, is_constraint : False
+2022-10-08 17:12:26,833 - mmcls - INFO - GradCosine init no.0016, gradnorm: 7.936997890472412, gradcos : 0.2558746337890625, gradvar : 35.824466705322266, is_constraint : False
+2022-10-08 17:12:27,170 - mmcls - INFO - GradCosine init no.0017, gradnorm: 8.274189949035645, gradcos : 0.24505957961082458, gradvar : 42.056182861328125, is_constraint : False
+2022-10-08 17:12:27,509 - mmcls - INFO - GradCosine init no.0018, gradnorm: 8.018704414367676, gradcos : 0.2572689354419708, gradvar : 36.651092529296875, is_constraint : False
+2022-10-08 17:12:27,850 - mmcls - INFO - GradCosine init no.0019, gradnorm: 8.44073486328125, gradcos : 0.249891996383667, gradvar : 41.1248779296875, is_constraint : False
+2022-10-08 17:12:28,319 - mmcls - INFO - GradCosine init no.0020, gradnorm: 8.008352279663086, gradcos : 0.21042804419994354, gradvar : 39.2021484375, is_constraint : False
+2022-10-08 17:12:28,656 - mmcls - INFO - GradCosine init no.0021, gradnorm: 8.261406898498535, gradcos : 0.2639353275299072, gradvar : 39.90726852416992, is_constraint : False
+2022-10-08 17:12:28,986 - mmcls - INFO - GradCosine init no.0022, gradnorm: 8.693781852722168, gradcos : 0.27651283144950867, gradvar : 44.72844696044922, is_constraint : False
+2022-10-08 17:12:29,325 - mmcls - INFO - GradCosine init no.0023, gradnorm: 8.459041595458984, gradcos : 0.29009193181991577, gradvar : 38.95833206176758, is_constraint : False
+2022-10-08 17:12:29,665 - mmcls - INFO - GradCosine init no.0024, gradnorm: 7.594908714294434, gradcos : 0.25791555643081665, gradvar : 33.348758697509766, is_constraint : False
+2022-10-08 17:12:30,002 - mmcls - INFO - GradCosine init no.0025, gradnorm: 7.826064586639404, gradcos : 0.19115877151489258, gradvar : 38.51728820800781, is_constraint : False
+2022-10-08 17:12:30,340 - mmcls - INFO - GradCosine init no.0026, gradnorm: 8.597895622253418, gradcos : 0.2418593019247055, gradvar : 43.4010124206543, is_constraint : False
+2022-10-08 17:12:30,681 - mmcls - INFO - GradCosine init no.0027, gradnorm: 8.810221672058105, gradcos : 0.24352288246154785, gradvar : 45.037784576416016, is_constraint : False
+2022-10-08 17:12:31,018 - mmcls - INFO - GradCosine init no.0028, gradnorm: 8.237520217895508, gradcos : 0.2638448178768158, gradvar : 37.84767532348633, is_constraint : False
+2022-10-08 17:12:31,360 - mmcls - INFO - GradCosine init no.0029, gradnorm: 8.032428741455078, gradcos : 0.20465199649333954, gradvar : 41.98973083496094, is_constraint : False
+2022-10-08 17:12:31,831 - mmcls - INFO - GradCosine init no.0030, gradnorm: 8.392910957336426, gradcos : 0.20239286124706268, gradvar : 42.187286376953125, is_constraint : False
+2022-10-08 17:12:32,170 - mmcls - INFO - GradCosine init no.0031, gradnorm: 8.174570083618164, gradcos : 0.22180776298046112, gradvar : 39.957176208496094, is_constraint : False
+2022-10-08 17:12:32,508 - mmcls - INFO - GradCosine init no.0032, gradnorm: 8.3814697265625, gradcos : 0.29263409972190857, gradvar : 38.371524810791016, is_constraint : False
+2022-10-08 17:12:32,846 - mmcls - INFO - GradCosine init no.0033, gradnorm: 8.01807689666748, gradcos : 0.22380070388317108, gradvar : 39.01366424560547, is_constraint : False
+2022-10-08 17:12:33,182 - mmcls - INFO - GradCosine init no.0034, gradnorm: 8.554771423339844, gradcos : 0.23853495717048645, gradvar : 42.540008544921875, is_constraint : False
+2022-10-08 17:12:33,521 - mmcls - INFO - GradCosine init no.0035, gradnorm: 8.344736099243164, gradcos : 0.306476354598999, gradvar : 37.0541877746582, is_constraint : False
+2022-10-08 17:12:33,860 - mmcls - INFO - GradCosine init no.0036, gradnorm: 8.01056957244873, gradcos : 0.2466016411781311, gradvar : 37.730777740478516, is_constraint : False
+2022-10-08 17:12:34,198 - mmcls - INFO - GradCosine init no.0037, gradnorm: 7.952788829803467, gradcos : 0.20193305611610413, gradvar : 39.47071838378906, is_constraint : False
+2022-10-08 17:12:34,534 - mmcls - INFO - GradCosine init no.0038, gradnorm: 8.558138847351074, gradcos : 0.2998126745223999, gradvar : 39.09671401977539, is_constraint : False
+2022-10-08 17:12:34,931 - mmcls - INFO - GradCosine init no.0039, gradnorm: 8.097478866577148, gradcos : 0.27868950366973877, gradvar : 36.24189376831055, is_constraint : False
+2022-10-08 17:12:35,431 - mmcls - INFO - GradCosine init no.0040, gradnorm: 7.6546735763549805, gradcos : 0.2643227279186249, gradvar : 35.4695930480957, is_constraint : False
+2022-10-08 17:12:35,825 - mmcls - INFO - GradCosine init no.0041, gradnorm: 8.373567581176758, gradcos : 0.2563890516757965, gradvar : 40.714439392089844, is_constraint : False
+2022-10-08 17:12:36,240 - mmcls - INFO - GradCosine init no.0042, gradnorm: 8.168802261352539, gradcos : 0.22518162429332733, gradvar : 41.010589599609375, is_constraint : False
+2022-10-08 17:12:36,671 - mmcls - INFO - GradCosine init no.0043, gradnorm: 8.02505111694336, gradcos : 0.1948409527540207, gradvar : 40.80023956298828, is_constraint : False
+2022-10-08 17:12:37,093 - mmcls - INFO - GradCosine init no.0044, gradnorm: 8.555059432983398, gradcos : 0.32677263021469116, gradvar : 37.3101806640625, is_constraint : False
+2022-10-08 17:12:37,506 - mmcls - INFO - GradCosine init no.0045, gradnorm: 7.78466272354126, gradcos : 0.2385760396718979, gradvar : 35.555877685546875, is_constraint : False
+2022-10-08 17:12:38,084 - mmcls - INFO - GradCosine init no.0046, gradnorm: 7.62640380859375, gradcos : 0.1955597698688507, gradvar : 37.746063232421875, is_constraint : False
+2022-10-08 17:12:38,506 - mmcls - INFO - GradCosine init no.0047, gradnorm: 7.627012252807617, gradcos : 0.24311086535453796, gradvar : 35.304931640625, is_constraint : False
+2022-10-08 17:12:38,943 - mmcls - INFO - GradCosine init no.0048, gradnorm: 8.110658645629883, gradcos : 0.22368639707565308, gradvar : 39.873409271240234, is_constraint : False
+2022-10-08 17:12:39,503 - mmcls - INFO - GradCosine init no.0049, gradnorm: 7.765255928039551, gradcos : 0.2074315994977951, gradvar : 37.19978332519531, is_constraint : False
+2022-10-08 17:12:39,979 - mmcls - INFO - GradCosine init no.0050, gradnorm: 7.733938217163086, gradcos : 0.23973461985588074, gradvar : 35.34330749511719, is_constraint : False
+2022-10-08 17:12:40,449 - mmcls - INFO - GradCosine init no.0051, gradnorm: 8.233793258666992, gradcos : 0.1932755708694458, gradvar : 43.10456848144531, is_constraint : False
+2022-10-08 17:12:40,855 - mmcls - INFO - GradCosine init no.0052, gradnorm: 8.402395248413086, gradcos : 0.20642563700675964, gradvar : 43.19371795654297, is_constraint : False
+2022-10-08 17:12:41,281 - mmcls - INFO - GradCosine init no.0053, gradnorm: 8.33751106262207, gradcos : 0.2726837396621704, gradvar : 39.44648742675781, is_constraint : False
+2022-10-08 17:12:41,691 - mmcls - INFO - GradCosine init no.0054, gradnorm: 7.6266188621521, gradcos : 0.22350585460662842, gradvar : 35.99061965942383, is_constraint : False
+2022-10-08 17:12:42,121 - mmcls - INFO - GradCosine init no.0055, gradnorm: 8.271411895751953, gradcos : 0.1863105744123459, gradvar : 42.99367904663086, is_constraint : False
+2022-10-08 17:12:42,507 - mmcls - INFO - GradCosine init no.0056, gradnorm: 7.800975322723389, gradcos : 0.2104971706867218, gradvar : 37.260990142822266, is_constraint : False
+2022-10-08 17:12:42,960 - mmcls - INFO - GradCosine init no.0057, gradnorm: 7.538784027099609, gradcos : 0.25301072001457214, gradvar : 33.31444549560547, is_constraint : False
+2022-10-08 17:12:43,383 - mmcls - INFO - GradCosine init no.0058, gradnorm: 8.117427825927734, gradcos : 0.27018624544143677, gradvar : 37.419105529785156, is_constraint : False
+2022-10-08 17:12:43,832 - mmcls - INFO - GradCosine init no.0059, gradnorm: 8.131631851196289, gradcos : 0.19719795882701874, gradvar : 40.75989532470703, is_constraint : False
+2022-10-08 17:12:44,266 - mmcls - INFO - GradCosine init no.0060, gradnorm: 8.3362398147583, gradcos : 0.2576747536659241, gradvar : 39.49755859375, is_constraint : False
+2022-10-08 17:12:44,681 - mmcls - INFO - GradCosine init no.0061, gradnorm: 8.1172456741333, gradcos : 0.19847629964351654, gradvar : 40.20786666870117, is_constraint : False
+2022-10-08 17:12:45,125 - mmcls - INFO - GradCosine init no.0062, gradnorm: 7.381556510925293, gradcos : 0.19901709258556366, gradvar : 32.52375411987305, is_constraint : False
+2022-10-08 17:12:45,558 - mmcls - INFO - GradCosine init no.0063, gradnorm: 7.972182273864746, gradcos : 0.26856839656829834, gradvar : 35.63088607788086, is_constraint : False
+2022-10-08 17:12:45,965 - mmcls - INFO - GradCosine init no.0064, gradnorm: 8.276860237121582, gradcos : 0.2434845268726349, gradvar : 39.409454345703125, is_constraint : False
+2022-10-08 17:12:46,372 - mmcls - INFO - GradCosine init no.0065, gradnorm: 7.722530841827393, gradcos : 0.16614289581775665, gradvar : 41.33768844604492, is_constraint : False
+2022-10-08 17:12:46,822 - mmcls - INFO - GradCosine init no.0066, gradnorm: 7.845726490020752, gradcos : 0.2369716614484787, gradvar : 35.909263610839844, is_constraint : False
+2022-10-08 17:12:47,247 - mmcls - INFO - GradCosine init no.0067, gradnorm: 8.312134742736816, gradcos : 0.17058633267879486, gradvar : 44.0884895324707, is_constraint : False
+2022-10-08 17:12:47,663 - mmcls - INFO - GradCosine init no.0068, gradnorm: 7.804867744445801, gradcos : 0.22482995688915253, gradvar : 36.4697265625, is_constraint : False
+2022-10-08 17:12:48,147 - mmcls - INFO - GradCosine init no.0069, gradnorm: 8.296852111816406, gradcos : 0.2575199604034424, gradvar : 39.106163024902344, is_constraint : False
+2022-10-08 17:12:48,549 - mmcls - INFO - GradCosine init no.0070, gradnorm: 8.336040496826172, gradcos : 0.2503965497016907, gradvar : 39.815120697021484, is_constraint : False
+2022-10-08 17:12:48,991 - mmcls - INFO - GradCosine init no.0071, gradnorm: 8.075334548950195, gradcos : 0.2569563686847687, gradvar : 38.55636215209961, is_constraint : False
+2022-10-08 17:12:49,398 - mmcls - INFO - GradCosine init no.0072, gradnorm: 8.748775482177734, gradcos : 0.2432541847229004, gradvar : 45.65298080444336, is_constraint : False
+2022-10-08 17:12:49,812 - mmcls - INFO - GradCosine init no.0073, gradnorm: 7.912905693054199, gradcos : 0.23385882377624512, gradvar : 36.648468017578125, is_constraint : False
+2022-10-08 17:12:50,222 - mmcls - INFO - GradCosine init no.0074, gradnorm: 7.882929801940918, gradcos : 0.24715077877044678, gradvar : 36.78541564941406, is_constraint : False
+2022-10-08 17:12:50,641 - mmcls - INFO - GradCosine init no.0075, gradnorm: 8.07459831237793, gradcos : 0.1963750571012497, gradvar : 40.46407699584961, is_constraint : False
+2022-10-08 17:12:51,061 - mmcls - INFO - GradCosine init no.0076, gradnorm: 8.00674819946289, gradcos : 0.20827661454677582, gradvar : 39.16600036621094, is_constraint : False
+2022-10-08 17:12:51,495 - mmcls - INFO - GradCosine init no.0077, gradnorm: 8.260841369628906, gradcos : 0.20163536071777344, gradvar : 43.77467727661133, is_constraint : False
+2022-10-08 17:12:51,900 - mmcls - INFO - GradCosine init no.0078, gradnorm: 8.16617202758789, gradcos : 0.26945027709007263, gradvar : 37.65229034423828, is_constraint : False
+2022-10-08 17:12:52,361 - mmcls - INFO - GradCosine init no.0079, gradnorm: 8.433252334594727, gradcos : 0.30432289838790894, gradvar : 39.17487335205078, is_constraint : False
+2022-10-08 17:12:52,867 - mmcls - INFO - GradCosine init no.0080, gradnorm: 8.280242919921875, gradcos : 0.15797802805900574, gradvar : 44.48273849487305, is_constraint : False
+2022-10-08 17:12:53,286 - mmcls - INFO - GradCosine init no.0081, gradnorm: 7.5466766357421875, gradcos : 0.22819837927818298, gradvar : 34.45600128173828, is_constraint : False
+2022-10-08 17:12:53,706 - mmcls - INFO - GradCosine init no.0082, gradnorm: 8.000208854675293, gradcos : 0.24145644903182983, gradvar : 37.763343811035156, is_constraint : False
+2022-10-08 17:12:54,174 - mmcls - INFO - GradCosine init no.0083, gradnorm: 7.939975738525391, gradcos : 0.24154500663280487, gradvar : 37.36529541015625, is_constraint : False
+2022-10-08 17:12:54,719 - mmcls - INFO - GradCosine init no.0084, gradnorm: 7.772857666015625, gradcos : 0.18393084406852722, gradvar : 38.168251037597656, is_constraint : False
+2022-10-08 17:12:55,166 - mmcls - INFO - GradCosine init no.0085, gradnorm: 7.464076519012451, gradcos : 0.20450162887573242, gradvar : 34.07430648803711, is_constraint : False
+2022-10-08 17:12:55,586 - mmcls - INFO - GradCosine init no.0086, gradnorm: 8.365047454833984, gradcos : 0.2530599534511566, gradvar : 40.25526809692383, is_constraint : False
+2022-10-08 17:12:55,996 - mmcls - INFO - GradCosine init no.0087, gradnorm: 7.996513366699219, gradcos : 0.23647692799568176, gradvar : 38.10383224487305, is_constraint : False
+2022-10-08 17:12:56,400 - mmcls - INFO - GradCosine init no.0088, gradnorm: 7.83000373840332, gradcos : 0.18184611201286316, gradvar : 38.14717102050781, is_constraint : False
+2022-10-08 17:12:56,831 - mmcls - INFO - GradCosine init no.0089, gradnorm: 7.927879810333252, gradcos : 0.2679440677165985, gradvar : 35.08380126953125, is_constraint : False
+2022-10-08 17:12:57,257 - mmcls - INFO - GradCosine init no.0090, gradnorm: 7.908373832702637, gradcos : 0.28758561611175537, gradvar : 34.706478118896484, is_constraint : False
+2022-10-08 17:12:57,674 - mmcls - INFO - GradCosine init no.0091, gradnorm: 8.449764251708984, gradcos : 0.24363969266414642, gradvar : 43.53944396972656, is_constraint : False
+2022-10-08 17:12:58,103 - mmcls - INFO - GradCosine init no.0092, gradnorm: 8.01097297668457, gradcos : 0.2044878900051117, gradvar : 40.09607696533203, is_constraint : False
+2022-10-08 17:12:58,512 - mmcls - INFO - GradCosine init no.0093, gradnorm: 7.790620803833008, gradcos : 0.20871815085411072, gradvar : 38.40730285644531, is_constraint : False
+2022-10-08 17:12:59,003 - mmcls - INFO - GradCosine init no.0094, gradnorm: 8.131425857543945, gradcos : 0.20231132209300995, gradvar : 41.455841064453125, is_constraint : False
+2022-10-08 17:12:59,509 - mmcls - INFO - GradCosine init no.0095, gradnorm: 7.882901668548584, gradcos : 0.2382688969373703, gradvar : 37.02098083496094, is_constraint : False
+2022-10-08 17:13:00,101 - mmcls - INFO - GradCosine init no.0096, gradnorm: 8.212711334228516, gradcos : 0.2368561029434204, gradvar : 41.11265563964844, is_constraint : False
+2022-10-08 17:13:00,712 - mmcls - INFO - GradCosine init no.0097, gradnorm: 7.407558441162109, gradcos : 0.24905699491500854, gradvar : 31.64682388305664, is_constraint : False
+2022-10-08 17:13:01,263 - mmcls - INFO - GradCosine init no.0098, gradnorm: 7.953607082366943, gradcos : 0.18408384919166565, gradvar : 40.16545104980469, is_constraint : False
+2022-10-08 17:13:01,692 - mmcls - INFO - GradCosine init no.0099, gradnorm: 8.358591079711914, gradcos : 0.214970201253891, gradvar : 44.99509048461914, is_constraint : False
+2022-10-08 17:13:01,695 - mmcls - INFO - The results : {'val1': 0.23681455448269845, 'train1': 0.23596101939678193, 'val2': 0.23448859602212907}
+2022-10-08 17:13:01,695 - mmcls - INFO - The extra results : {'val1var': 13.258086919784546, 'train1var': 22.930684423446657, 'val2var': 38.891440048217774}
+2022-10-08 17:13:02,271 - mmcls - INFO - Saving the checkpoint to ./work_dir/init/init.pth ...
+2022-10-08 17:13:02,490 - mmcls - INFO - Done!
