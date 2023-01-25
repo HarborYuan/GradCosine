@@ -1,4 +1,10 @@
-# GradCosine
+# Towards Theoretically Inspired Neural Initialization Optimization
+
+**Accepted by NeurIPS 2022, New Orleans, LA, USA.**
+
+[[arXiv](https://arxiv.org/abs/2210.05956)] [[PDF]](https://arxiv.org/pdf/2210.05956)
+
+
 
 ## Installation
 There is no need to install the environment. Instead, what the users need to do is to pull the docker from the internet.
@@ -48,3 +54,4 @@ bash tools/dist_train.sh configs/mmcls/resnet/resnet50_8xb32_in1k.py 8 --seed 0 
 ```
 
 Since we adopt the deterministic training, you will get exactly the same results as in the paper if everything works well. I have tested the above scripts so that you can find the [gradcos](logs/init.txt) and [training](logs/train.txt) logs.
+We also provide pre-initialized checkpoint [here](ckpt/resnet50_gc_gn_init.pth).
